@@ -1,7 +1,14 @@
--- Creates a database called hbnb_dev_db in the current MySQL server
+# Connect to MySQL as the root user
+mysql -u root -p
+
+# Create the hbnb_dev_db database if it doesn't already exist
 CREATE DATABASE IF NOT EXISTS hbnb_dev_db;
--- creates the MySQL server user hbnb_test
-CREATE USER IF NOT EXISTS 'hbnb_dev@localhost' IDENTIFIED BY 'hbnb_dev@pwd';
--- grant permissions for user hbnb_test
-GRANT ALL ON `hbnb_dev_db`.* TO 'hbnb_dev@localhost';
-GRANT SELECT ON `performance_schema`.* TO 'hbnb_dev@localhost';
+
+# Create the hbnb_dev user if it doesn't already exist
+CREATE USER IF NOT EXISTS 'hbnb_dev'@'localhost' IDENTIFIED BY 'hbnb_dev_pwd';
+
+# Grant all privileges on the hbnb_dev_db database to the hbnb_dev user
+GRANT ALL PRIVILEGES ON hbnb_dev_db.* TO 'hbnb_dev'@'localhost';
+
+# Grant SELECT privilege on the performance_schema database to the hbnb_dev user
+GRANT SELECT ON performance_schema.* TO 'hbnb_dev'@'localhost';
