@@ -1,48 +1,42 @@
-# Redo the task #0 but by using Puppet:
+# deploy static
+$whisper_dirs = [ '/data/', '/data/web_static/',
+                        '/data/web_static/releases/', '/data/web_static/shared/',
+                        '/data/web_static/releases/test/'
+                  ]
 
-exec {'apt-get-update':
-  command => '/usr/bin/apt-get update'
+package {'nginx':
+  ensure  => installed,
 }
 
-package {'apache2.2-common':
-  ensure  => 'absent',
-  require => Exec['apt-get-update']
+file { $whisper_dirs:
+        ensure  => 'directory',
+        owner   => 'ubuntu',
+        group   => 'ubuntu',
+        recurse => 'remote',
+        mode    => '0777',
+}
+file { '/data/web_static/current':
+  ensure => link,
+  target => '/data/web_static/releases/test/',
+}
+file {'/data/web_static/releases/test/index.html':
+  ensure  => present,
+  content => 'Holberton School for the win!',
 }
 
-package { 'nginx':
-  ensure  => 'installed',
-  require => Package['apache2.2-common']
+exec { 'chown -R ubuntu:ubuntu /data/':
+  path => '/usr/bin/:/usr/local/bin/:/bin/'
+}
+
+file_line {'deploy static':
+  path  => '/etc/nginx/sites-available/default',
+  after => 'server_name _;',
+  line  => "\n\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t}",
 }
 
 service {'nginx':
-  ensure  =>  'running',
-  require => file_line['LOCATION SETUP']
+  ensure  => running,
 }
 
-file { ['/data', '/data/web_static', '/data/web_static/shared', '/data/web_static/releases', '/data/web_static/releases/test'] :
-  ensure  => 'directory',
-  owner   => 'ubuntu',
-  group   => 'ubuntu',
-  require =>  Package['nginx']
-}
-
-file { '/data/web_static/releases/test/index.html':
-  ensure  => 'present',
-  content => 'Hello AirBnb',
-  require =>  Package['nginx']
-}
-
-file { '/data/web_static/current':
-  ensure => 'link',
-  target => '/data/web_static/releases/test',
-  force  => true
-}
-
-file_line { 'LOCATION SETUP ':
-  ensure  => 'present',
-  path    => '/etc/nginx/sites-enabled/default',
-  line    => 'location /hbnb_static/ { alias /data/web_static/current/; autoindex off; } location / { ',
-  match   => '^\s+location+',
-  require => Package['nginx'],
-  notify  => Service['nginx'],
+exec {'/etc/init.d/nginx restart':
 }
